@@ -1,0 +1,41 @@
+# --- C++ / CMake ---
+build/
+.cache/
+CMakeFiles/
+CMakeSettings.json
+*.o
+*.a
+*.out
+bin/
+
+# --- Swift / Xcode ---
+# Archivos de usuario y estados de Xcode
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcworkspace/contents.xcworkspacedata
+node_modules/
+DerivedData/
+*.moved-aside
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+xcuserdata/
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# --- VS Code ---
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# --- OS / Generales ---
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+.env
