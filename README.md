@@ -11,12 +11,19 @@ Este es un servidor de chat de alto rendimiento y no bloqueante, escrito en C++ 
     *   `ClientManager`: Gestiona la lógica de los clientes y el broadcasting de mensajes.
 *   **Gestión de Memoria Moderna**: Uso extensivo de `std::unique_ptr` para la seguridad de memoria y propiedad clara de recursos.
 
-## Requisitos
+## Requisitos Previos
 
-*   Sistema Operativo: macOS (o BSD compatible con kqueue).
-*   Compilador: `clang++` (con soporte C++14 o superior).
-*   Herramienta de compilación: Terminal estándar.
+Este proyecto utiliza la librería [nlohmann/json](https://github.com/nlohmann/json) para el manejo de mensajes.
 
+### Instalación de dependencias
+
+**Opción A: Descarga manual (Recomendado)**
+Descarga el archivo `json.hpp` desde el repositorio oficial y colócalo en la siguiente ruta:
+`include/external/nlohmann/json.hpp`
+
+**Opción B: Gestores de paquetes**
+- **macOS:** `brew install nlohmann-json`
+- **Ubuntu/Debian:** `sudo apt-get install nlohmann-json3-dev`
 ## Estructura del Proyecto
 
 ```

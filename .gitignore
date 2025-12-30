@@ -8,6 +8,9 @@ CMakeSettings.json
 *.out
 bin/
 
+# Dependencias de terceros
+server/include/external/json.hpp
+
 # --- Swift / Xcode ---
 # Archivos de usuario y estados de Xcode
 *.xcodeproj/*
