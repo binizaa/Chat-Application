@@ -1,30 +1,31 @@
 # Chat Server (C++ / Kqueue)
 
-Este es un servidor de chat de alto rendimiento y no bloqueante, escrito en C++ moderno y diseñado para sistemas macOS/BSD utilizando `kqueue` para la gestión eficiente de eventos.
+This is a high-performance, non-blocking chat server written in modern C++ and designed for macOS/BSD systems using `kqueue` for efficient event notification.
 
-## Características
+## Features
 
-*   **Alto Rendimiento**: Utiliza I/O multiplexado con `kqueue` para manejar múltiples conexiones simultáneamente sin bloquear el hilo principal.
-*   **Arquitectura Modular**:
-    *   `NetworkServer`: Maneja la creación y configuración de sockets de bajo nivel.
-    *   `KqueueEngine`: Abstrae la complejidad de las llamadas al sistema `kevent`.
-    *   `ClientManager`: Gestiona la lógica de los clientes y el broadcasting de mensajes.
-*   **Gestión de Memoria Moderna**: Uso extensivo de `std::unique_ptr` para la seguridad de memoria y propiedad clara de recursos.
+*   **High Performance**: Uses multiplexed I/O with `kqueue` to handle multiple connections simultaneously without blocking the main thread.
+*   **Modular Architecture**:
+    *   `NetworkServer`: Handles low-level socket creation and configuration.
+    *   `KqueueEngine`: Abstracts the complexity of `kevent` system calls.
+    *   `ClientManager`: Manages client logic and message broadcasting.
+*   **Modern Memory Management**: Extensive use of `std::unique_ptr` for memory safety and clear resource ownership.
 
-## Requisitos Previos
+## Prerequisites
 
-Este proyecto utiliza la librería [nlohmann/json](https://github.com/nlohmann/json) para el manejo de mensajes.
+This project uses the [nlohmann/json](https://github.com/nlohmann/json) library for message handling.
 
-### Instalación de dependencias
+### Installing Dependencies
 
-**Opción A: Descarga manual (Recomendado)**
-Descarga el archivo `json.hpp` desde el repositorio oficial y colócalo en la siguiente ruta:
-`include/external/nlohmann/json.hpp`
+**Option A: Manual Download (Recommended)**
+Download the `json.hpp` file from the official repository and place it in the following path:
+`server/include/external/nlohmann/json.hpp` (You may need to create these directories).
 
-**Opción B: Gestores de paquetes**
+**Option B: Package Managers**
 - **macOS:** `brew install nlohmann-json`
 - **Ubuntu/Debian:** `sudo apt-get install nlohmann-json3-dev`
-## Estructura del Proyecto
+
+## Project Structure
 
 ```
 server/
@@ -43,9 +44,28 @@ server/
         └── NetworkServer.cpp
 ```
 
-## Compilación
+## Build Instructions
 
-Para compilar el proyecto, ejecuta el siguiente comando desde la raíz del proyecto (donde está este README):
+You can build the project using **CMake** (recommended) or directly with `clang++`.
+
+### Option 1: Using CMake
+
+1.  Create a build directory:
+    ```bash
+    mkdir build && cd build
+    ```
+2.  Generate build files:
+    ```bash
+    cmake ..
+    ```
+3.  Compile:
+    ```bash
+    make
+    ```
+
+### Option 2: Using clang++ directly
+
+Run the following command from the project root:
 
 ```bash
 clang++ -std=c++14 \
@@ -58,22 +78,26 @@ clang++ -std=c++14 \
     -o chat_server
 ```
 
-## Ejecución
+## Running the Server
 
-Una vez compilado, inicia el servidor:
+Once compiled, start the server:
 
 ```bash
+# If built with CMake (inside build/ directory)
+./chat_server
+
+# If built with clang++ (from root)
 ./chat_server
 ```
 
-Deberías ver un mensaje indicando que el servidor está corriendo en el puerto `8080`.
+You should see a message indicating the server is running on port `8080`.
 
-## Uso
+## Usage
 
-Para conectarte al servidor y probar el chat, puedes usar `netcat` (`nc`) desde múltiples ventanas de terminal:
+To connect to the server and test the chat, you can use `netcat` (`nc`) from multiple terminal windows:
 
 ```bash
 nc localhost 8080
 ```
 
-Escribe mensajes en una ventana y verás cómo se transmiten a los otros clientes conectados.
+Type messages in one window and see them broadcasted to other connected clients.

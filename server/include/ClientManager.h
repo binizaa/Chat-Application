@@ -21,6 +21,8 @@ public:
     void removeClient(int fd);
     void sendMessage(int senderFd, const std::string& message);
     void updateClientKqueueEvents(int fd, int16_t filter, uint16_t flags);
+
+    string getNameClient(int fd);
 };
 
 #endif

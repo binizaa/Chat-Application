@@ -6,6 +6,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+using namespace std;
+
 enum class SendResult {
     COMPLETE,
     PENDING,
@@ -13,24 +15,33 @@ enum class SendResult {
 };
 
 class Client {
-public:
+private:
     int fd;
-    std::string nick;
+    std::string name;
     std::string buffer;
-    std::queue<std::string> outgoingQueue;  // Cola de mensajes salientes
-    std::string currentSendBuffer;          // Mensaje actual siendo enviado
+    std::queue<std::string> outgoingQueue;
+    std::string currentSendBuffer;
 
+public:
+    // Constructores
     Client(int fd);
+    Client(int fd, std::string name);
     ~Client();
 
-    void queueMessage(const std::string& message);
+    // Getters
+    int getFd() const { return fd; }
+    std::string getName() const { return name; }
+    std::string getBuffer() const { return buffer; }
+    queue<std::string> getOutgoingQueue() const { return outgoingQueue; }
     bool hasDataToSend() const;
+
+    // Setters
+    void setName(const string& newName);
+    void setBuffer(const std::string& newBuffer);
+
+    // Métodos de lógica
+    void queueMessage(const std::string& message);
     SendResult trySendData();
-
-    void setNick(std::string name);
-
-private:
-    std::string generateRandomNick(int length);
 };
 
 #endif

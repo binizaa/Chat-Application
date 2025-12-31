@@ -7,26 +7,15 @@
 
 using namespace std;
 
-Client::Client(int fd) : fd(fd) {
-    nick = std::to_string(fd);
-}
+Client::Client(int _fd) 
+    : fd(_fd){}
+
+Client::Client(int _fd, string _name) 
+    : fd(_fd),
+      name(_name){}
 
 Client::~Client() {
     close(fd);
-}
-
-string Client::generateRandomNick(int length) {
-    static bool seeded = false;
-    if (!seeded) {
-        srand(time(0));
-        seeded = true;
-    }
-    string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    string nick;
-    for (int i = 0; i < length; i++) {
-        nick += chars[rand() % chars.length()];
-    }
-    return nick;
 }
 
 void Client::queueMessage(const string& message) {
@@ -65,6 +54,6 @@ SendResult Client::trySendData() {
     return outgoingQueue.empty() ? SendResult::COMPLETE : SendResult::PENDING;
 }
 
-void Client::setNick(std::string name){
-    nick = name;
+void Client::setName(const string& newName) {
+    this->name = newName;
 }

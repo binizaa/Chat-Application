@@ -9,7 +9,10 @@ CMakeSettings.json
 bin/
 
 # Dependencias de terceros
-server/include/external/json.hpp
+server/include/core/JsonParser.h
+
+# --- Clientes ---
+clientDumby/
 
 # --- Swift / Xcode ---
 # Archivos de usuario y estados de Xcode

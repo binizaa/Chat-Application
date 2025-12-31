@@ -1,9 +1,9 @@
 #include "ClientManager.h"
 
 void ClientManager::addClient(std::unique_ptr<Client> client) {
-    int fd = client->fd;
+    int fd = client->getFd();
     clients[fd] = std::move(client);
-    std::cout << "Chat conectado: " << clients[fd]->nick << std::endl;
+    std::cout << "Chat conectado: " << clients[fd]->getName() << std::endl;
 }
 
 void ClientManager::updateClientKqueueEvents(int fd, int16_t filter, uint16_t flags) {
@@ -13,16 +13,16 @@ void ClientManager::updateClientKqueueEvents(int fd, int16_t filter, uint16_t fl
 void ClientManager::sendMessage(int senderFd, const std::string& message) {
     if (clients.find(senderFd) == clients.end()) return;
 
-    std::string senderNick = clients[senderFd]->nick;
-    std::string fullMessage = senderNick + ": " + message + "\r\n";
+    std::string senderName = clients[senderFd]->getName();
+    std::string fullMessage = senderName + ": " + message + "\r\n";
 
     for (auto& pair : clients) {
         if (pair.first != senderFd) {
             Client* client = pair.second.get();
             client->queueMessage(fullMessage);
 
-            if (client->outgoingQueue.size() == 1) {
-                updateClientKqueueEvents(client->fd, EVFILT_WRITE, EV_ADD | EV_ENABLE);
+            if (client->getOutgoingQueue().size() == 1) {
+                updateClientKqueueEvents(client->getFd(), EVFILT_WRITE, EV_ADD | EV_ENABLE);
             }
         }
     }
@@ -36,4 +36,8 @@ void ClientManager::removeClient(int fd) {
         // 3. Remove the entry from the unordered_map (unique_ptr handles deletion)
         clients.erase(it);
     }
+}
+
+string ClientManager::getNameClient(int fd) {
+    return clients[fd]->getName();
 }

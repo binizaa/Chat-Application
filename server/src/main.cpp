@@ -4,6 +4,9 @@
 #include "core/NetworkServer.h"
 #include "core/KqueueEngine.h"
 
+
+using namespace std;
+
 int main() {
     try {
         // 1. Initialize Core Components
@@ -34,26 +37,38 @@ int main() {
                     
                     if (cli_fd != -1) {
                         fcntl(cli_fd, F_SETFL, O_NONBLOCK);
-                        manager.addClient(std::make_unique<Client>(cli_fd));
+
+                        auto newCliente = std::make_unique<Client>(cli_fd, "Name");
+
+                        manager.addClient(std::move(newCliente));
                         manager.updateClientKqueueEvents(cli_fd, EVFILT_READ, EV_ADD | EV_ENABLE);
                         std::cout << "[SERVER] New connection: " << cli_fd << std::endl;
                     }
                 } else if (events[i].filter == EVFILT_READ) {
-                    // READ DATA
-                    char buf[1024] = {0};
+                    char buf[1024];
                     ssize_t bytes = read(fd, buf, sizeof(buf) - 1);
 
                     if (bytes <= 0) {
-                        std::cout << "[SERVER] Cliente " << fd << " desconectado." << std::endl;
+                        std::cout << "[SERVER] Cliente " << fd << " desconectado por cierre de socket." << std::endl;
                         manager.removeClient(fd);
-                        close(fd);
+                        close(fd); 
                     } else {
-                        // --- AQUÍ IMPRIMES EL MENSAJE ---
-                        std::string msg(buf);
-                        std::cout << "[CLIENTE " << fd << "]: " << msg << std::flush; 
-                        
-                        // Reenviar a otros (si tu manager lo hace)
-                        manager.sendMessage(fd, msg);
+                        buf[bytes] = '\0'; 
+                        string msg(buf);
+
+                        msg.erase(msg.find_last_not_of("\n\r") + 1);
+
+                        if (msg == "exit") {
+                            std::cout << "[SERVER] Cliente " << fd << " solicitó salida." << std::endl;
+                            manager.removeClient(fd);
+                            close(fd);
+                        } else {
+
+                            string name = manager.getNameClient(fd);
+
+                            std::cout << "[LOG] " << name << ": " << msg << std::endl;
+                            manager.sendMessage(fd, msg);
+                        }
                     }
                 }
             }
