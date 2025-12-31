@@ -1,7 +1,7 @@
 #ifndef CLIENTMANAGER_H
 #define CLIENTMANAGER_H
 
-#include "Client.h"
+#include "models/Client.h"
 #include <string>
 #include <unordered_map>
 #include <iostream>
