@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <iostream>
 #include "core/KqueueEngine.h"
+#include "utils/constants.h"
 
 class ClientManager {
 private:
@@ -17,12 +18,23 @@ public:
     
     ~ClientManager() = default;
 
-    void addClient(std::unique_ptr<Client> client);
+    // Modificado para coincidir con la implementación y requerimientos
+    bool addClient(std::unique_ptr<Client> client);
+    RegistrationResult registerUser(int fd, const std::string& username);
+    
     void removeClient(int fd);
+    // Helper alias for clarity if needed, or just use removeClient
+    void disconnectClient(int fd) { removeClient(fd); }
+
     void sendMessage(int senderFd, const std::string& message);
+    void broadcastNewUser(int fd, const std::string& username);
+    void handleClientWrite(int fd);
+
     void updateClientKqueueEvents(int fd, int16_t filter, uint16_t flags);
 
-    string getNameClient(int fd);
+    bool isNameTaken(const std::string& name);
+    void setClientName(int fd, const std::string& name);
+    std::string getNameClient(int fd);
 };
 
 #endif

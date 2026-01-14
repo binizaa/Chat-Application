@@ -1,9 +1,13 @@
 #include <iostream>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+
 #include "managers/ClientManager.h"
 #include "core/NetworkServer.h"
 #include "core/KqueueEngine.h"
-
+#include "utils/JsonHandler.h"
 
 using namespace std;
 
@@ -36,6 +40,7 @@ int main() {
                     int cli_fd = accept(server.getFd(), (struct sockaddr*)&clientAddr, &clientLen);
                     
                     if (cli_fd != -1) {
+                        // Ensure non-blocking
                         fcntl(cli_fd, F_SETFL, O_NONBLOCK);
 
                         auto newCliente = std::make_unique<Client>(cli_fd, "Name");
@@ -51,25 +56,28 @@ int main() {
                     if (bytes <= 0) {
                         std::cout << "[SERVER] Cliente " << fd << " desconectado por cierre de socket." << std::endl;
                         manager.removeClient(fd);
-                        close(fd); 
+                        close(fd);
                     } else {
-                        buf[bytes] = '\0'; 
+                        buf[bytes] = '\0';
                         string msg(buf);
 
-                        msg.erase(msg.find_last_not_of("\n\r") + 1);
+                        // Clean whitespace (trim newline)
+                        if (!msg.empty() && (msg.back() == '\n' || msg.back() == '\r')) {
+                             msg.erase(msg.find_last_not_of("\n\r") + 1);
+                        }
 
                         if (msg == "exit") {
                             std::cout << "[SERVER] Cliente " << fd << " solicitó salida." << std::endl;
                             manager.removeClient(fd);
                             close(fd);
                         } else {
-
-                            string name = manager.getNameClient(fd);
-
-                            std::cout << "[LOG] " << name << ": " << msg << std::endl;
-                            manager.sendMessage(fd, msg);
+                            // Delegate to JsonHandler
+                            JsonHandler::HandleBuffer(fd, msg, manager);
                         }
                     }
+                } else if (events[i].filter == EVFILT_WRITE) {
+                    // Handle write events
+                    manager.handleClientWrite(fd);
                 }
             }
         }
@@ -80,3 +88,10 @@ int main() {
 
     return 0;
 }
+
+/*
+# Conéctate usando netcat
+nc localhost 8080
+# Pega el JSON y presiona Enter
+{"type": "IDENTIFY", "username": "Nombre"}
+*/
