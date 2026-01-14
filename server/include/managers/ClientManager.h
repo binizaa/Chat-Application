@@ -28,6 +28,7 @@ public:
 
     void sendMessage(int senderFd, const std::string& message);
     void broadcastNewUser(int fd, const std::string& username);
+    void handleClientWrite(int fd);
 
     void updateClientKqueueEvents(int fd, int16_t filter, uint16_t flags);
 

@@ -7,7 +7,7 @@ using namespace std;
 
 RegistrationResult ClientManager::registerUser(int fd, const std::string& username) {
     // 1. Regla de longitud (máx 8 caracteres)
-    if (username.empty() || username.length() > 8) {
+    if (username.empty()) {
         return RegistrationResult::INVALID_FORMAT;
     }
 
@@ -55,26 +55,18 @@ void ClientManager::updateClientKqueueEvents(int fd, int16_t filter, uint16_t fl
 }
 
 
-void ClientManager::sendMessage(int senderFd, const string& message) {
-    if (clients.find(senderFd) == clients.end()) return;
+void ClientManager::sendMessage(int fd, const string& message) {
+    if (clients.find(fd) == clients.end()) return;
 
-    string senderName = clients[senderFd]->getName();
-    string fullMessage = senderName + ": " + message + "\r\n";
+    Client* client = clients[fd].get();
+    client->queueMessage(message);
 
-    for (auto& pair : clients) {
-        if (pair.first != senderFd) {
-            Client* client = pair.second.get();
-            client->queueMessage(fullMessage);
-
-            if (client->getOutgoingQueue().size() == 1) {
-                updateClientKqueueEvents(client->getFd(), EVFILT_WRITE, EV_ADD | EV_ENABLE);
-            }
-        }
+    if (client->getOutgoingQueue().size() == 1) {
+        updateClientKqueueEvents(client->getFd(), EVFILT_WRITE, EV_ADD | EV_ENABLE);
     }
 }
 
-void ClientManager::broadcastNewUser(int fd, const std::string& username) {
-    string message = "[SYSTEM] User " + username + " has joined the chat.\r\n";
+void ClientManager::broadcastNewUser(int fd, const std::string& message) {
     for (auto& pair : clients) {
         if (pair.first != fd) {
              Client* client = pair.second.get();
@@ -83,6 +75,20 @@ void ClientManager::broadcastNewUser(int fd, const std::string& username) {
              if (client->getOutgoingQueue().size() == 1) {
                  updateClientKqueueEvents(client->getFd(), EVFILT_WRITE, EV_ADD | EV_ENABLE);
              }
+        }
+    }
+}
+
+void ClientManager::handleClientWrite(int fd) {
+    if (clients.find(fd) == clients.end()) return;
+
+    Client* client = clients[fd].get();
+    SendResult result = client->trySendData();
+
+    if (result == SendResult::COMPLETE || result == SendResult::ERROR) {
+        // Disable write events if no more data to send or error occurred
+        if (!client->hasDataToSend()) {
+            updateClientKqueueEvents(fd, EVFILT_WRITE, EV_DELETE);
         }
     }
 }

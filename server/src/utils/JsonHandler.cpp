@@ -1,23 +1,24 @@
 #include "utils/JsonHandler.h"
-#include "models/DTO/UserDTO.h"
+#include "protocol/Identify.h"
 #include <iostream>
-#include <nlohmann/json.hpp>
+#include "external/json.hpp"
 #include "utils/constants.h"
 
 using json = nlohmann::json;    
 
-static void sendResponse(int fd, const std::string& type, const std::string& status, const std::string& username, ClientManager& manager) {
-    json response = {
-        {"type", type},
-        {"status", status},
-        {"username", username}
-    };
-    manager.sendMessage(fd, response.dump());
+static void sendResponse(int fd, const std::string& operation, const std::string& result, const std::string& extra, ClientManager& manager) {
+    protocol::Response response;
+    response.operation = operation;
+    response.result = result;
+    response.extra = extra;
+
+    json j = response;
+    manager.sendMessage(fd, j.dump());
 }
 
-static void sendProtocolError(int fd, const std::string& type, ClientManager& manager) {
+static void sendProtocolError(int fd, ClientManager& manager) {
     json response = {
-        {"type", type},
+        {"type", "INVALID"},
         {"message", "Protocol Error"}
     };
     manager.sendMessage(fd, response.dump());
@@ -75,34 +76,50 @@ void JsonHandler::HandleBuffer(int fd, const std::string& buffer, ClientManager&
 void JsonHandler::handleIdentify(int fd, const std::string& jsonString, ClientManager& manager) {
     try {
         auto j = nlohmann::json::parse(jsonString);
-        auto dto = j.get<UserDTO::IDENTIFY>();
+        auto dto = j.get<protocol::Identify>();
+
+        std::cout << "[IDENTIFY] Client on FD " << fd << " attempting to identify as: " << dto.username << std::endl;
 
         // Delegamos la validación al manager
         auto result = manager.registerUser(fd, dto.username);
 
         switch (result) {
-            case RegistrationResult::SUCCESS:
+            case RegistrationResult::SUCCESS: {
+                std::cout << "[SUCCESS] " << dto.username << " has successfully identified" << std::endl;
+
+                // Respuesta al cliente que se identificó
                 sendResponse(fd, "IDENTIFY", "SUCCESS", dto.username, manager);
-                // Notificamos a los demás
-                manager.broadcastNewUser(fd, dto.username);
+
+                // Broadcast NEW_USER a los demás clientes
+                protocol::NewUser newUserMsg;
+                newUserMsg.username = dto.username;
+                json broadcast = newUserMsg;
+                manager.broadcastNewUser(fd, broadcast.dump());
+
+                std::cout << "[BROADCAST] Notifying other clients about new user: " << dto.username << std::endl;
                 break;
+            }
 
             case RegistrationResult::ALREADY_EXISTS:
+                std::cout << "[ERROR] Username already exists: " << dto.username << std::endl;
                 sendResponse(fd, "IDENTIFY", "USER_ALREADY_EXISTS", dto.username, manager);
                 break;
 
             case RegistrationResult::INVALID_FORMAT:
+                std::cout << "[ERROR] Invalid username format: " << dto.username << std::endl;
                 sendResponse(fd, "IDENTIFY", "INVALID", dto.username, manager);
-                manager.disconnectClient(fd); // Regla: Desconectar por datos inválidos
+                manager.disconnectClient(fd);
                 break;
 
             case RegistrationResult::NOT_IDENTIFIED:
+                std::cout << "[ERROR] Client not found: " << dto.username << std::endl;
                 sendResponse(fd, "IDENTIFY", "NOT_IDENTIFIED", dto.username, manager);
                 break;
         }
 
     } catch (const std::exception& e) {
-        sendProtocolError(fd, "INVALID", manager);
+        std::cout << "[ERROR] Failed to parse IDENTIFY message from FD " << fd << ": " << e.what() << std::endl;
+        sendProtocolError(fd, manager);
         manager.disconnectClient(fd);
     }
 }

@@ -3,7 +3,7 @@
 
 #include <string>
 #include "managers/ClientManager.h"
-#include "externals/json.hpp"
+#include "external/json.hpp"
 
 // JsonHandler.h: Esta es la capa más crítica. Recibe el string del socket y determina el tipo de mensaje.
 // Si falta una llave o el valor es inválido (ej. un estado que no sea AWAY): Construye el JSON de INVALID y marca al cliente para desconexión.

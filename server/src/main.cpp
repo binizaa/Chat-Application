@@ -56,9 +56,9 @@ int main() {
                     if (bytes <= 0) {
                         std::cout << "[SERVER] Cliente " << fd << " desconectado por cierre de socket." << std::endl;
                         manager.removeClient(fd);
-                        close(fd); 
+                        close(fd);
                     } else {
-                        buf[bytes] = '\0'; 
+                        buf[bytes] = '\0';
                         string msg(buf);
 
                         // Clean whitespace (trim newline)
@@ -75,6 +75,9 @@ int main() {
                             JsonHandler::HandleBuffer(fd, msg, manager);
                         }
                     }
+                } else if (events[i].filter == EVFILT_WRITE) {
+                    // Handle write events
+                    manager.handleClientWrite(fd);
                 }
             }
         }
